@@ -1,7 +1,7 @@
 import os
 
-BOT_TOKEN = os.getenv("8655630907:AAF34iEzf3h8PO6RhgtHuDBmrFXZhtRARVk")
-AFFILIATE_TAG = os.getenv("sumandealsx-21")
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+AFFILIATE_TAG = os.getenv("AFFILIATE_TAG")
 
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN not set")
