@@ -1,10 +1,9 @@
 import re
 import os
-import asyncio
 from flask import Flask
-from threading import Thread
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+import threading
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 AFFILIATE_TAG = os.getenv("AFFILIATE_TAG")
@@ -42,26 +41,22 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid link")
 
 
-# Run Flask in thread (IMPORTANT FIX)
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
-
-# MAIN
-async def main():
-    # Start Flask in background
-    Thread(target=run_flask).start()
-
-    # Start Telegram bot
+# Run bot (NO asyncio.run)
+def run_bot():
     app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
 
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
     print("Bot started...")
-    await app_bot.run_polling()
+    app_bot.run_polling()
 
 
+# MAIN
 if __name__ == "__main__":
-    asyncio.run(main())
+    # Run bot in thread
+    threading.Thread(target=run_bot).start()
+
+    # Run Flask
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
