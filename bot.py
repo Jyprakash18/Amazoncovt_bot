@@ -54,16 +54,36 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    link = convert_link(text)
+    new_text = text
+    urls = re.findall(r"(https?://[^\s]+)", text)
 
-    if link:
-        # ORIGINAL TEXT + NEW LINK
-        new_text = f"{text}\n\n✅ Affiliate Link:\n{link}"
+    found = False
+
+    for url in urls:
+        original_url = url
+
+        # Handle short link
+        if "amzn.to" in url:
+            try:
+                import requests
+                response = requests.get(url, allow_redirects=True, timeout=5)
+                url = response.url
+            except:
+                continue
+
+        # Check Amazon link
+        if "amazon." in url:
+            clean_url = url.split("?")[0]
+            affiliate_url = f"{clean_url}?tag={AFFILIATE_TAG}"
+
+            # Replace in text
+            new_text = new_text.replace(original_url, affiliate_url)
+            found = True
+
+    if found:
         await update.message.reply_text(new_text)
-
     else:
         await update.message.reply_text("❌ Invalid Amazon link")
-
 # Telegram bot run (MAIN THREAD)
 def run_bot():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
