@@ -35,11 +35,11 @@ def convert_link(text):
 
             # ✅ STEP 2: Handle ALL short links (amzn.to, amznn.in etc.)
             if any(x in url for x in ["amzn.to", "amznn.in"]):
-                try:
-                    response = requests.get(url, allow_redirects=True, timeout=5)
-                    url = response.url
-                except:
-                    continue
+    try:
+        response = requests.get(url, allow_redirects=True, timeout=5)
+        url = response.url
+    except:
+        return None, None   # ✅ FIX
 
             # ✅ STEP 3: Check Amazon
             if "amazon." in url:
