@@ -61,14 +61,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
 
-    new_text = text
-    urls = re.findall(r"(https?://[^\s]+)", text)
+    original, affiliate = convert_link(text)
 
-    found = False
-
-    for url in urls:
-        original_url = url
-
+    if affiliate:
+        new_text = text.replace(original, affiliate)
+        await update.message.reply_text(new_text)
+    else:
+        await update.message.reply_text("❌ Invalid Amazon link")
         # Handle short link
         if "amzn.to" in url:
             try:
