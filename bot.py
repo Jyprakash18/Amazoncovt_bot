@@ -17,13 +17,33 @@ def home():
 
 
 # Convert Amazon link
-def convert_link(text):
-    match = re.search(r"(https?://(?:www\.)?amazon\.[^\s]+)", text)
-    if not match:
-        return None
-    url = match.group(1).split("?")[0]
-    return f"{url}?tag={AFFILIATE_TAG}"
+import requests
 
+def convert_link(text):
+    try:
+        # Find all links
+        urls = re.findall(r"(https?://[^\s]+)", text)
+
+        for url in urls:
+
+            # 👉 Handle short link
+            if "amzn.to" in url:
+                try:
+                    response = requests.get(url, allow_redirects=True, timeout=5)
+                    url = response.url
+                except:
+                    continue
+
+            # 👉 Check Amazon link
+            if "amazon." in url:
+                clean_url = url.split("?")[0]
+                return f"{clean_url}?tag={AFFILIATE_TAG}"
+
+        return None
+
+    except Exception as e:
+        print("Error:", e)
+        return None
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
