@@ -18,32 +18,39 @@ def home():
 
 # Convert Amazon link
 import requests
+import urllib.parse
 
 def convert_link(text):
     try:
-        # Find all links
         urls = re.findall(r"(https?://[^\s]+)", text)
 
-        for url in urls:
+        for original_url in urls:
+            url = original_url
 
-            # 👉 Handle short link
-            if "amzn.to" in url:
+            # ✅ STEP 1: Handle redirect links (dealscrown etc.)
+            if "url=" in url:
+                parsed = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
+                if "url" in parsed:
+                    url = parsed["url"][0]
+
+            # ✅ STEP 2: Handle ALL short links (amzn.to, amznn.in etc.)
+            if any(x in url for x in ["amzn.to", "amznn.in"]):
                 try:
                     response = requests.get(url, allow_redirects=True, timeout=5)
                     url = response.url
                 except:
                     continue
 
-            # 👉 Check Amazon link
+            # ✅ STEP 3: Check Amazon
             if "amazon." in url:
-                clean_url = url.split("?")[0]
-                return f"{clean_url}?tag={AFFILIATE_TAG}"
+                clean = url.split("?")[0]
+                return original_url, f"{clean}?tag={AFFILIATE_TAG}"
 
-        return None
+        return None, None
 
     except Exception as e:
         print("Error:", e)
-        return None
+        return None, None
 
 # Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
