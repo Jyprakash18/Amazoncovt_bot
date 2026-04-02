@@ -33,13 +33,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Handle message
 async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
+
     link = convert_link(text)
 
     if link:
-        await update.message.reply_text(f"✅ {link}")
+        # ORIGINAL TEXT + NEW LINK
+        new_text = f"{text}\n\n✅ Affiliate Link:\n{link}"
+        await update.message.reply_text(new_text)
+
     else:
         await update.message.reply_text("❌ Invalid Amazon link")
-
 
 # Telegram bot run (MAIN THREAD)
 def run_bot():
