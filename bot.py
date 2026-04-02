@@ -8,15 +8,15 @@ import threading
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 AFFILIATE_TAG = os.getenv("AFFILIATE_TAG")
 
-# Flask app
-app = Flask(__name__)
+# Flask app (for Render)
+flask_app = Flask(__name__)
 
-@app.route('/')
+@flask_app.route("/")
 def home():
     return "Bot is running ✅"
 
 
-# Convert link
+# Convert Amazon link
 def convert_link(text):
     match = re.search(r"(https?://(?:www\.)?amazon\.[^\s]+)", text)
     if not match:
@@ -25,9 +25,9 @@ def convert_link(text):
     return f"{url}?tag={AFFILIATE_TAG}"
 
 
-# /start
+# Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("👋 Send Amazon link")
+    await update.message.reply_text("👋 Send Amazon product link")
 
 
 # Handle message
@@ -38,25 +38,27 @@ async def handle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if link:
         await update.message.reply_text(f"✅ {link}")
     else:
-        await update.message.reply_text("❌ Invalid link")
+        await update.message.reply_text("❌ Invalid Amazon link")
 
 
-# Run bot (NO asyncio.run)
+# Telegram bot run (MAIN THREAD)
 def run_bot():
-    app_bot = ApplicationBuilder().token(BOT_TOKEN).build()
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    app_bot.add_handler(CommandHandler("start", start))
-    app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle))
 
-    print("Bot started...")
-    app_bot.run_polling()
+    print("Bot running...")
+    app.run_polling()
+
+
+# Flask run (separate thread)
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    flask_app.run(host="0.0.0.0", port=port)
 
 
 # MAIN
 if __name__ == "__main__":
-    # Run bot in thread
-    threading.Thread(target=run_bot).start()
-
-    # Run Flask
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    threading.Thread(target=run_web).start()
+    run_bot()
