@@ -27,21 +27,21 @@ def convert_link(text):
         for original_url in urls:
             url = original_url
 
-            # ✅ STEP 1: Handle redirect links (dealscrown etc.)
+            # Redirect link fix
             if "url=" in url:
                 parsed = urllib.parse.parse_qs(urllib.parse.urlparse(url).query)
                 if "url" in parsed:
                     url = parsed["url"][0]
 
-            # ✅ STEP 2: Handle ALL short links (amzn.to, amznn.in etc.)
-            if any(x in url for x in ["amzn.to", "amznn.in"]):
-    try:
-        response = requests.get(url, allow_redirects=True, timeout=5)
-        url = response.url
-    except:
-        return None, None   # ✅ FIX
+            # Short link fix
+            if "amzn" in url:
+                try:
+                    response = requests.get(url, allow_redirects=True, timeout=5)
+                    url = response.url
+                except:
+                    return None, None
 
-            # ✅ STEP 3: Check Amazon
+            # Amazon check
             if "amazon." in url:
                 clean = url.split("?")[0]
                 return original_url, f"{clean}?tag={AFFILIATE_TAG}"
